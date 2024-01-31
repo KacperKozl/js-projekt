@@ -6,7 +6,7 @@
     <ChannelList v-if="listType==='channels'" v-model:channelList="channels" @addNew="subscribeToChannel" @changeCurrentChannel="changeCurrentChannel" @deleteChannel="unsubscribeChannel"/>
     <ChannelList v-if="listType==='private'" v-model:channelList="privates" @addNew="newPrivate" @changeCurrentChannel="changeCurrentChannel" @deleteChannel="unsubscribePrivate"/>
     <button @click="changeListType" class="listButton">{{listType.toLocaleUpperCase()}}</button>
-    <MessageView v-if="currentChannel!=null" v-model:channel="currentChannel" v-model:messageList="messages" v-model:userLogin="userLogin" @synchroMessage="synchronizeMessages()"/>
+    <MessageView v-if="currentChannel!=null" v-model:channel="currentChannel" v-model:messageList="messages" v-model:userLogin="userLogin" @synchroMessage="synchronizeMessages"/>
   </div>
 </template>
 
@@ -133,7 +133,9 @@ async function synchronizeMessages(){
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({channelId:currentChannel.value.id})
-    }).then(response=>response.json()).then(data=>messages.value=data)
+    }).then(response=>response.json()).then(data=>{
+      messages.value=data
+    })
   }catch(error){
     console.log(error)
   }

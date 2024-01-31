@@ -30,7 +30,9 @@
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(message)
-    }).then(emit("synchroMessage"))
+    }).then(()=>{
+      emit("synchroMessage")
+    })
   }catch(error){
     console.log(error)
   }
@@ -43,7 +45,7 @@ async function deleteMessage(messageId){
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(message)
-    }).then(emit("synchroMessage"))
+    }).then(()=>emit("synchroMessage"))
   }catch(error){
     console.log(error)
   }
@@ -55,7 +57,7 @@ async function editMessage(messageToEdit){
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(messageToEdit)
-    }).then(emit("synchroMessage"))
+    }).then(()=>emit("synchroMessage"))
   }catch(error){
     console.log(error)
   }
