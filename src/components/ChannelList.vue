@@ -4,7 +4,7 @@
       <input v-model="newChannelName" required placeholder="Add new channel">
       <button>Add</button>
     </form>
-    <div v-for="channel in channelList" :key="channel.id" @click="changeCurrentChannel(channel)">
+    <div v-for="channel in channelList" :key="channel.id" @click="changeCurrentChannel(channel)" v-bind:class="{newMessage:isNewMessage(channel)}">
       {{ channel.name }}
       <button @click="deleteChannel(channel)">Delete</button>
     </div>
@@ -23,10 +23,14 @@
     emit("addNew",newChannelName.value);
   }
   function changeCurrentChannel(channel){
+    channel.oldMsgId=channel.lastMessageId
     emit('changeCurrentChannel',channel)
   }
   function deleteChannel(channel){
     emit('deleteChannel',channel.id)
+  }
+  function isNewMessage(channel){
+    return channel.lastMessageId>channel.oldMsgId
   }
   </script>
   
@@ -49,6 +53,10 @@
   .grid-item{
     grid-column:1;
     grid-row: 1;
+  }
+  .newMessage{
+    color: red;
+    font-weight: bold;
   }
   </style>
   

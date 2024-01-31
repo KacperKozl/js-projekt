@@ -1,6 +1,6 @@
 <template>
   <img alt="Vue logo" src="./assets/logo.png">
-  <LoginScreen v-if="userId<0" @login="setLogId"/>
+  <LoginScreen v-if="userId<0" @login="setLog"/>
   <div class="grid" v-else>
   <ChannelList v-if="listType==='channels'" v-model:channelList="channels" @addNew="subscribeToChannel" @changeCurrentChannel="changeCurrentChannel" @deleteChannel="unsubscribeChannel"/>
   <ChannelList v-if="listType==='private'" v-model:channelList="privates" @addNew="newPrivate" @changeCurrentChannel="changeCurrentChannel" @deleteChannel="unsubscribePrivate"/>
@@ -18,12 +18,15 @@ const userLogin=ref('none');
 const userId=ref(1)
 const currentChannel=ref()
 const listType=ref("channels")
-function setLogId(loginUserId){
-  userId.value=loginUserId;
+function setLog(loginUser){
+  userId.value=loginUser.id;
+  userLogin.value=loginUser.login;
+  //setInterval
+  synchronizeData()
 }
 const channels=ref([
-  {id:1,name:"test1",type:"channel"},
-  {id:2,name:"test2",type:"channel"}
+  {id:1,name:"test1",type:"channel",oldMsgId:1,lastMessageId:2},
+  {id:2,name:"test2",type:"channel",oldMsgId:1,lastMessageId:1}
 ])
 const privates=ref([
   {id:1,name:"priv1",type:"private"},
@@ -101,9 +104,12 @@ async function synchronizeChannels(){
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(userLogin.value)
-    }).then(response=>response.json).then(data=>channels.value=data.array.forEach(element => 
-      element.type='channel'
-    ))
+    }).then(response=>response.json).then(data=>{
+      data.forEach(newChan=>{
+        newChan.oldMsgId=privates.value.find(old=>newChan.id===old.id).id??-1
+        newChan.type='private'
+      })
+      privates.value=data})
   }catch(error){
     console.log(error)
   }
@@ -114,7 +120,13 @@ async function synchronizePrivates(){
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(userLogin.value)
-    }).then(response=>response.json).then(data=>privates.value=data.array.forEach(element=>element.type='private'))
+    }).then(response=>response.json).then(data=>{
+      data.forEach(newChan=>{
+        newChan.oldMsgId=privates.value.find(old=>newChan.id===old.id).id??-1
+        newChan.type='private'
+      })
+      privates.value=data
+    })
   }catch(error){
     console.log(error)
   }
@@ -131,6 +143,7 @@ async function synchronizeMessages(){
     console.log(error)
   }
 }
+
 </script>
 
 <style>
