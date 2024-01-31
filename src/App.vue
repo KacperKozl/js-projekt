@@ -1,12 +1,13 @@
+<!-- eslint-disable no-unused-vars -->
 <template>
-  <img alt="Vue logo" src="./assets/logo.png">
-  <LoginScreen v-if="userId<0" @login="setLog"/>
+  <img alt="App logo" src="./assets/logo.png">
+  <LoginScreen v-if="!userId" @login="setLog"/>
   <div class="grid" v-else>
-  <ChannelList v-if="listType==='channels'" v-model:channelList="channels" @addNew="subscribeToChannel" @changeCurrentChannel="changeCurrentChannel" @deleteChannel="unsubscribeChannel"/>
-  <ChannelList v-if="listType==='private'" v-model:channelList="privates" @addNew="newPrivate" @changeCurrentChannel="changeCurrentChannel" @deleteChannel="unsubscribePrivate"/>
-  <button @click="changeListType">Zmień</button>
-  <MessageView v-if="currentChannel!=null" v-model:channel="currentChannel" v-model:messageList="messages" v-model:userLogin="userLogin" @synchroMessage="synchronizeMessages"/>
-</div>
+    <ChannelList v-if="listType==='channels'" v-model:channelList="channels" @addNew="subscribeToChannel" @changeCurrentChannel="changeCurrentChannel" @deleteChannel="unsubscribeChannel"/>
+    <ChannelList v-if="listType==='private'" v-model:channelList="privates" @addNew="newPrivate" @changeCurrentChannel="changeCurrentChannel" @deleteChannel="unsubscribePrivate"/>
+    <button @click="changeListType" class="listButton">{{listType.toLocaleUpperCase()}}</button>
+    <MessageView v-if="currentChannel!=null" v-model:channel="currentChannel" v-model:messageList="messages" v-model:userLogin="userLogin" @synchroMessage="synchronizeMessages()"/>
+  </div>
 </template>
 
 <script setup>
@@ -15,7 +16,7 @@ import LoginScreen from './components/LoginScreen.vue'
 import ChannelList from './components/ChannelList.vue'
 import MessageView from './components/MessageView.vue';
 const userLogin=ref('none');
-const userId=ref(1)
+const userId=ref()
 const currentChannel=ref()
 const listType=ref("channels")
 function setLog(loginUser){
@@ -25,16 +26,10 @@ function setLog(loginUser){
   synchronizeData()
 }
 const channels=ref([
-  {id:1,name:"test1",type:"channel",oldMsgId:1,lastMessageId:2},
-  {id:2,name:"test2",type:"channel",oldMsgId:1,lastMessageId:1}
 ])
 const privates=ref([
-  {id:1,name:"priv1",type:"private"},
-  {id:2,name:"priv2",type:"private"}
 ])
 const messages=ref([
-  {id:1,text:'raz',date:'now',sender:'none'},
-  {id:2,text:'dwa',date:'now',sender:'someone'}
 ])
 async function subscribeToChannel(channelName){
   const subscribedChannel={channelName:channelName,userLogin:userLogin.value}
@@ -86,7 +81,6 @@ async function unsubscribePrivate(privateId){
 }
 async function changeCurrentChannel(channel){
   currentChannel.value=channel
-  console.log(channel.id)
   synchronizeMessages()
 }
 function changeListType(){
@@ -103,13 +97,13 @@ async function synchronizeChannels(){
   await fetch("http://localhost:8000/api/channelAll", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(userLogin.value)
-    }).then(response=>response.json).then(data=>{
+      body: JSON.stringify({userLogin:userLogin.value})
+    }).then(response=>response.json()).then(data=>{
       data.forEach(newChan=>{
-        newChan.oldMsgId=privates.value.find(old=>newChan.id===old.id).id??-1
-        newChan.type='private'
+        newChan.oldMsgId=channels.value.find(old=>newChan.id-1===old.id)?.id??newChan.lastMessageId
+        newChan.type='channel'
       })
-      privates.value=data})
+      channels.value=data})
   }catch(error){
     console.log(error)
   }
@@ -119,10 +113,11 @@ async function synchronizePrivates(){
   await fetch("http://localhost:8000/api/privateAll", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(userLogin.value)
-    }).then(response=>response.json).then(data=>{
+      body: JSON.stringify({userLogin:userLogin.value})
+    }).then(response=>response.json()).then(data=>{
+      console.log(data)
       data.forEach(newChan=>{
-        newChan.oldMsgId=privates.value.find(old=>newChan.id===old.id).id??-1
+        newChan.oldMsgId=privates.value.find(old=>newChan.id===old.id)?.id??newChan.lastMessageId
         newChan.type='private'
       })
       privates.value=data
@@ -132,13 +127,13 @@ async function synchronizePrivates(){
   }
 }
 async function synchronizeMessages(){
-  if(currentChannel.value===null) return;
+  if(!currentChannel.value) return;
   try{
   await fetch("http://localhost:8000/api/"+currentChannel.value.type+"/messagesAll", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(currentChannel.value.id)
-    }).then(response=>response.json).then(data=>messages.value=data)
+      body: JSON.stringify({channelId:currentChannel.value.id})
+    }).then(response=>response.json()).then(data=>messages.value=data)
   }catch(error){
     console.log(error)
   }
@@ -153,10 +148,16 @@ async function synchronizeMessages(){
   -moz-osx-font-smoothing: grayscale;
   text-align: center;
   color: #2c3e50;
-  margin-top: 60px;
+  background-color: #ffffcc;
+  padding: 20px;
 }
 .grid{
   display: grid;
+  background-color: beige;
+  margin:auto;
+  padding-bottom: 20px;
+  width: fit-content;
+  grid-template-columns:1fr 2fr;
 }
 #ChannelList{
   grid-column-start: 1;
@@ -165,5 +166,33 @@ async function synchronizeMessages(){
 #MessageList{
   grid-column-start: 2;
   grid-column-end: 2;
+}
+.listButton{
+  width: fit-content;
+  margin: auto;
+  background-color: orange;
+  border: 1px solid transparent;
+  border-radius: 3px;
+  box-shadow: rgba(255, 255, 255, .4) 0 1px 0 0 inset;
+  box-sizing: border-box;
+  color: #fff;
+  cursor: pointer;
+  display: inline-block;
+  font-family: -apple-system,system-ui,"Segoe UI","Liberation Sans",sans-serif;
+  font-size: 15px;
+  font-weight: bold;
+  line-height: 1.15385;
+  outline: none;
+  padding: 8px;
+  position: relative;
+  text-align: center;
+  text-decoration: none;
+  user-select: none;
+  -webkit-user-select: none;
+  touch-action: manipulation;
+  vertical-align: baseline;
+  white-space: nowrap;
+  grid-row: 2;
+  grid-column:1;
 }
 </style>
