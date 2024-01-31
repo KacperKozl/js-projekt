@@ -38,7 +38,7 @@ async function subscribeToChannel(channelName){
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(subscribedChannel)
-    }).then(synchronizeData())
+    }).then(()=>synchronizeData())
   }catch(error){
     console.log(error)
   }
@@ -50,7 +50,7 @@ async function unsubscribeChannel(channelId){
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(unsubscribedChannel)
-    }).then(synchronizeData())
+    }).then(()=>synchronizeData())
   }catch(error){
     console.log(error)
   }
@@ -62,7 +62,7 @@ async function newPrivate(privateName){
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(subscribedPrivate)
-    }).then(synchronizeData())
+    }).then(()=>synchronizeData())
   }catch(error){
     console.log(error)
   }
@@ -74,7 +74,7 @@ async function unsubscribePrivate(privateId){
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(unsubscribedPrivate)
-    }).then(synchronizeData())
+    }).then(()=>synchronizeData())
   }catch(error){
     console.log(error)
   }
