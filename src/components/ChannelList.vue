@@ -6,7 +6,7 @@
     </form>
     <div class="listItem" v-for="channel in channelList" :key="channel.id" @click="changeCurrentChannel(channel)" v-bind:class="{newMessage:isNewMessage(channel)}">
       <label>{{ channel.name }}</label>
-      <button @click="deleteChannel(channel)" class="deleteButton">Delete</button>
+      <button @click="deleteChannel($event,channel)" class="deleteButton">Delete</button>
     </div>
   </div>
   </template>
@@ -26,7 +26,8 @@
     channel.oldMsgId=channel.lastMessageId
     emit('changeCurrentChannel',channel)
   }
-  function deleteChannel(channel){
+  function deleteChannel(e,channel){
+    e.stopPropagation();
     emit('deleteChannel',channel.id)
   }
   function isNewMessage(channel){

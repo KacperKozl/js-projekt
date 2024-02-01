@@ -6,7 +6,7 @@
     <ChannelList v-if="listType==='channels'" v-model:channelList="channels" @addNew="subscribeToChannel" @changeCurrentChannel="changeCurrentChannel" @deleteChannel="unsubscribeChannel"/>
     <ChannelList v-if="listType==='private'" v-model:channelList="privates" @addNew="newPrivate" @changeCurrentChannel="changeCurrentChannel" @deleteChannel="unsubscribePrivate"/>
     <button @click="changeListType" class="listButton">{{listType.toLocaleUpperCase()}}</button>
-    <MessageView v-if="currentChannel!=null" v-model:channel="currentChannel" v-model:messageList="messages" v-model:userLogin="userLogin" @synchroMessage="synchronizeMessages"/>
+    <MessageView v-if="currentChannel" v-model:channel="currentChannel" v-model:messageList="messages" v-model:userLogin="userLogin" @synchroMessage="synchronizeMessages"/>
   </div>
 </template>
 
@@ -17,7 +17,8 @@ import ChannelList from './components/ChannelList.vue'
 import MessageView from './components/MessageView.vue';
 const userLogin=ref('none');
 const userId=ref()
-const currentChannel=ref()
+let currentChannel=ref()
+const visbleChannel=ref('nie')
 const listType=ref("channels")
 function setLog(loginUser){
   userId.value=loginUser.id;
@@ -44,6 +45,8 @@ async function subscribeToChannel(channelName){
   }
 }
 async function unsubscribeChannel(channelId){
+  visbleChannel.value="nie"
+  messages.value=ref()
   const unsubscribedChannel={channelId:channelId,userLogin:userLogin.value}
   try{
   await fetch("http://localhost:8000/api/channel/unsubscribe", {
@@ -68,6 +71,8 @@ async function newPrivate(privateName){
   }
 }
 async function unsubscribePrivate(privateId){
+  currentChannel=ref()
+  console.log(currentChannel.value)
   const unsubscribedPrivate={privateId:privateId}
   try{
   await fetch("http://localhost:8000/api/private/unsubscribe", {
@@ -79,7 +84,9 @@ async function unsubscribePrivate(privateId){
     console.log(error)
   }
 }
-async function changeCurrentChannel(channel){
+function changeCurrentChannel(channel){
+  console.log(channel)
+  console.log("zmienil sie channel")
   currentChannel.value=channel
   synchronizeMessages()
 }
@@ -127,13 +134,16 @@ async function synchronizePrivates(){
   }
 }
 async function synchronizeMessages(){
-  if(!currentChannel.value) return;
+  console.log(currentChannel.value)
+  if(!currentChannel.value) {console.log("nie ma kanału");return;}
   try{
+    
   await fetch("http://localhost:8000/api/"+currentChannel.value.type+"/messagesAll", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({channelId:currentChannel.value.id})
     }).then(response=>response.json()).then(data=>{
+      console.log(data)
       messages.value=data
     })
   }catch(error){
