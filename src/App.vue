@@ -70,7 +70,6 @@ async function newPrivate(privateName){
 }
 async function unsubscribePrivate(privateId){
   currentChannel=ref()
-  console.log(currentChannel.value)
   const unsubscribedPrivate={privateId:privateId}
   try{
   await fetch("http://localhost:8000/api/private/unsubscribe", {
@@ -83,9 +82,9 @@ async function unsubscribePrivate(privateId){
   }
 }
 function changeCurrentChannel(channel){
-  console.log(channel)
-  console.log("zmienil sie channel")
   currentChannel.value=channel
+  currentChannel.value.oldMsgId=currentChannel.value.lastMessageId
+  console.log(currentChannel.value.oldMsgId)
   synchronizeMessages()
 }
 function changeListType(){
@@ -98,16 +97,18 @@ function synchronizeData(){
   synchronizeMessages()
 }
 async function synchronizeChannels(){
+  console.log("kanały")
   try{
   await fetch("http://localhost:8000/api/channelAll", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({userLogin:userLogin.value})
     }).then(response=>response.json()).then(data=>{
-      data.forEach(newChan=>{
-        newChan.oldMsgId=channels.value.find(old=>newChan.id-1===old.id)?.id??newChan.lastMessageId
+      let newChannels=data;
+      for(let newChan of newChannels){
+        newChan.oldMsgId=channels.value.find(old=>newChan.id===old.id)?.oldMsgId??newChan.lastMessageId
         newChan.type='channel'
-      })
+      }
       channels.value=data})
   }catch(error){
     console.log(error)
@@ -120,9 +121,8 @@ async function synchronizePrivates(){
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({userLogin:userLogin.value})
     }).then(response=>response.json()).then(data=>{
-      console.log(data)
       data.forEach(newChan=>{
-        newChan.oldMsgId=privates.value.find(old=>newChan.id===old.id)?.id??newChan.lastMessageId
+        newChan.oldMsgId=privates.value.find(old=>newChan.id===old.id)?.oldMsgId??newChan.lastMessageId
         newChan.type='private'
       })
       privates.value=data
@@ -132,7 +132,6 @@ async function synchronizePrivates(){
   }
 }
 async function synchronizeMessages(){
-  console.log(currentChannel.value)
   if(!currentChannel.value) {console.log("nie ma kanału");return;}
   try{
     
@@ -141,7 +140,6 @@ async function synchronizeMessages(){
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({channelId:currentChannel.value.id})
     }).then(response=>response.json()).then(data=>{
-      console.log(data)
       messages.value=data
     })
   }catch(error){
