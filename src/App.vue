@@ -84,6 +84,8 @@ async function unsubscribePrivate(privateId){
 function changeCurrentChannel(channel){
   currentChannel.value=channel
   currentChannel.value.oldMsgId=currentChannel.value.lastMessageId
+  localStorage.setItem("private+"+userLogin.value,JSON.stringify(privates.value))
+  localStorage.setItem("channel+"+userLogin.value,JSON.stringify(channels.value))
   console.log(currentChannel.value.oldMsgId)
   synchronizeMessages()
 }
@@ -105,11 +107,15 @@ async function synchronizeChannels(){
       body: JSON.stringify({userLogin:userLogin.value})
     }).then(response=>response.json()).then(data=>{
       let newChannels=data;
+      let oldL=JSON.parse(localStorage.getItem("channel+"+userLogin.value))
+      console.log(oldL)
       for(let newChan of newChannels){
-        newChan.oldMsgId=channels.value.find(old=>newChan.id===old.id)?.oldMsgId??newChan.lastMessageId
+        newChan.oldMsgId=oldL?.find(old=>newChan.id===old.id)?.oldMsgId??newChan.lastMessageId
         newChan.type='channel'
       }
-      channels.value=data})
+      channels.value=data
+      localStorage.setItem("channel+"+userLogin.value,JSON.stringify(data))
+    })
   }catch(error){
     console.log(error)
   }
@@ -121,11 +127,14 @@ async function synchronizePrivates(){
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({userLogin:userLogin.value})
     }).then(response=>response.json()).then(data=>{
+      let oldL=JSON.parse(localStorage.getItem("private+"+userLogin.value))
+      console.log(oldL)
       data.forEach(newChan=>{
-        newChan.oldMsgId=privates.value.find(old=>newChan.id===old.id)?.oldMsgId??newChan.lastMessageId
+        newChan.oldMsgId=oldL?.find(old=>newChan.id===old.id)?.oldMsgId??newChan.lastMessageId
         newChan.type='private'
       })
       privates.value=data
+      localStorage.setItem("private+"+userLogin.value,JSON.stringify(data))
     })
   }catch(error){
     console.log(error)
