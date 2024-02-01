@@ -18,12 +18,11 @@ import MessageView from './components/MessageView.vue';
 const userLogin=ref('none');
 const userId=ref()
 let currentChannel=ref()
-const visbleChannel=ref('nie')
 const listType=ref("channels")
 function setLog(loginUser){
   userId.value=loginUser.id;
   userLogin.value=loginUser.login;
-  //setInterval
+  setInterval(synchronizeData,1000);
   synchronizeData()
 }
 const channels=ref([
@@ -45,8 +44,7 @@ async function subscribeToChannel(channelName){
   }
 }
 async function unsubscribeChannel(channelId){
-  visbleChannel.value="nie"
-  messages.value=ref()
+  currentChannel=ref()
   const unsubscribedChannel={channelId:channelId,userLogin:userLogin.value}
   try{
   await fetch("http://localhost:8000/api/channel/unsubscribe", {
